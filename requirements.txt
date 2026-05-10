@@ -1,14 +1,8 @@
 streamlit
+streamlit-option-menu
+streamlit-extras
 pandas
 numpy
 plotly
-altair
-matplotlib
-seaborn
-streamlit-option-menu
-streamlit-extras
-openpyxl
 scikit-learn
-Pillow
-statsmodels
 xlsxwriter
