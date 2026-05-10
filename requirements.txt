@@ -10,3 +10,5 @@ streamlit-extras
 openpyxl
 scikit-learn
 Pillow
+statsmodels
+xlsxwriter
