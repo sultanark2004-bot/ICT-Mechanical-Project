@@ -1,82 +1,113 @@
 import streamlit as st
-import numpy as np
 import pandas as pd
+import numpy as np
+import plotly.express as px
 import plotly.graph_objects as go
 
-# --- UI Setup ---
-st.set_page_config(page_title="Advanced Mechanical Suite", layout="wide")
+# --- ADVANCED UI CONFIGURATION ---
+st.set_page_config(
+    page_title="MECH-PRO | Advanced Suite",
+    page_icon="⚙️",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
-# Header with IDs
-st.sidebar.markdown(f"## System Information")
-st.sidebar.info(f"**Lead Engineer:** Abdul Rafay Khan\n\n**ID:** 25-ME-220")
-
-st.title("🚀 Advanced Mechanical Engineering Suite")
-st.markdown("---")
-
-# --- Tabs for Clean Navigation ---
-tab1, tab2, tab3 = st.tabs(["Material Intelligence", "Unit Converter Pro", "Stress-Strain Simulator"])
-
-# --- TAB 1: MATERIAL INTELLIGENCE ---
-with tab1:
-    st.header("Material Properties Database")
-    
-    # Advanced Material Data
-    material_data = {
-        "Material": ["Steel (AISI 1020)", "Aluminum (6061-T6)", "Titanium (Grade 5)", "Copper (C11000)", "Cast Iron (Gray)"],
-        "Density (kg/m³)": [7850, 2700, 4430, 8940, 7200],
-        "Young's Modulus (GPa)": [200, 68.9, 114, 117, 110],
-        "Yield Strength (MPa)": [350, 276, 880, 70, 240],
-        "Thermal Expansion (10⁻⁶/°C)": [11.7, 23.6, 8.6, 16.7, 11.0]
+# Custom CSS for Professional Branding
+st.markdown("""
+    <style>
+    .main { background-color: #0e1117; }
+    .stMetric { background-color: #1f2937; padding: 15px; border-radius: 10px; border: 1px solid #374151; }
+    .developer-box { 
+        padding: 20px; 
+        border-radius: 10px; 
+        background: linear-gradient(135deg, #1e3a8a 0%, #1e1b4b 100%);
+        color: white;
+        margin-bottom: 25px;
     }
-    df = pd.DataFrame(material_data)
-    
-    selected_mat = st.selectbox("Search & Select Material", df["Material"])
-    mat_info = df[df["Material"] == selected_mat].iloc[0]
-    
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Density", f"{mat_info['Density (kg/m³)']}", "kg/m³")
-    col2.metric("Young's Modulus", f"{mat_info['Young\'s Modulus (GPa)']} GPa")
-    col3.metric("Yield Strength", f"{mat_info['Yield Strength (MPa)']} MPa")
+    </style>
+    """, unsafe_allow_html=True)
 
-# --- TAB 2: UNIT CONVERTER PRO ---
-with tab2:
-    st.header("High-Precision Conversion")
-    col_a, col_b = st.columns(2)
+# --- SIDEBAR IDENTIFICATION ---
+with st.sidebar:
+    st.markdown(f"""
+    <div class="developer-box">
+        <h2 style='margin:0;'>Abdul Rafay Khan</h2>
+        <p style='opacity:0.8;'>Reg ID: 25-ME-220</p>
+        <hr style='opacity:0.3;'>
+        <p style='font-size:0.8rem;'>Mechanical Engineering Systems v3.0</p>
+    </div>
+    """, unsafe_allow_html=True)
     
-    with col_a:
-        category = st.selectbox("Category", ["Dynamic Viscosity", "Thermal Conductivity", "Pressure/Stress"])
-        input_val = st.number_input("Value to Convert", value=1.0, format="%.4f")
+    st.header("Control Panel")
+    app_mode = st.radio("Toolbox Selection", 
+        ["Material Analytics", "Precision Converter", "Structural Beam Preview"])
+
+# --- DATA ENGINE ---
+materials_db = pd.DataFrame({
+    "Material": ["Steel (AISI 1020)", "Aluminum (6061-T6)", "Titanium (Gr 5)", "Copper (Pure)", "Brass"],
+    "Density (kg/m³)": [7850, 2700, 4430, 8960, 8500],
+    "Elastic Modulus (GPa)": [200, 68.9, 114, 117, 100],
+    "Yield Strength (MPa)": [350, 276, 880, 70, 200],
+    "Thermal Exp (µm/m·K)": [11.7, 23.6, 8.6, 16.7, 18.7]
+})
+
+# --- APP LOGIC ---
+
+if app_mode == "Material Analytics":
+    st.title("🔬 Material Property Analytics")
+    
+    col1, col2 = st.columns([1, 2])
+    
+    with col1:
+        selected_material = st.selectbox("Select Specimen", materials_db["Material"])
+        mat_data = materials_db[materials_db["Material"] == selected_material].iloc[0]
         
-    with col_b:
-        if category == "Pressure/Stress":
-            units = {"MPa": 1, "psi": 145.038, "bar": 10, "ksi": 0.145038}
-            base_unit = st.selectbox("From", list(units.keys()))
-            # Logic: Convert to MPa then to all others
-            val_in_mpa = input_val / units[base_unit]
-            st.write("**Equivalent Values:**")
-            for u, factor in units.items():
-                st.write(f"{u}: `{val_in_mpa * factor:.4f}`")
+        st.metric("Density", f"{mat_data['Density (kg/m³)']:,} kg/m³")
+        st.metric("Modulus of Elasticity", f"{mat_data['Elastic Modulus (GPa)']} GPa")
+        st.metric("Yield Stress", f"{mat_data['Yield Strength (MPa)']} MPa")
 
-# --- TAB 3: STRESS-STRAIN SIMULATOR ---
-with tab3:
-    st.header("Synthetic Stress-Strain Curve")
-    st.caption("Visualizing the elastic and plastic deformation based on selected material properties.")
+    with col2:
+        # Comparison Radar Chart
+        fig = go.Figure()
+        categories = ['Density', 'Elastic Modulus', 'Yield Strength', 'Thermal Exp']
+        
+        # Normalized values for visual comparison
+        fig.add_trace(go.Scatterpolar(
+            r=[mat_data['Density (kg/m³)']/9000, mat_data['Elastic Modulus (GPa)']/200, 
+               mat_data['Yield Strength (MPa)']/900, mat_data['Thermal Exp (µm/m·K)']/25],
+            theta=categories, fill='toself', name=selected_material
+        ))
+        fig.update_layout(polar=dict(radialaxis=dict(visible=False)), showlegend=True, template="plotly_dark")
+        st.plotly_chart(fig, use_container_width=True)
+
+elif app_mode == "Precision Converter":
+    st.title("⚖️ Precision Unit Engine")
     
-    # Generate a theoretical curve using Ramberg-Osgood style logic
-    E = mat_info["Young's Modulus (GPa)"] * 1000  # Convert to MPa
-    sy = mat_info["Yield Strength (MPa)"]
+    # Advanced Converter Logic
+    conv_groups = {
+        "Pressure/Stress": {"MPa": 1, "psi": 145.038, "Bar": 10, "Pa": 1000000},
+        "Force": {"Newton (N)": 1, "kN": 0.001, "lbf": 0.2248},
+        "Energy": {"Joule": 1, "BTU": 0.000947, "ft-lb": 0.737}
+    }
     
-    strain_elastic = np.linspace(0, sy/E, 50)
-    stress_elastic = E * strain_elastic
+    group = st.selectbox("Category", list(conv_groups.keys()))
+    val = st.number_input("Input Magnitude", value=100.0)
     
-    strain_plastic = np.linspace(sy/E, 0.2, 100)
-    stress_plastic = sy + (E * 0.05) * (strain_plastic - sy/E)**0.5 # Simplified hardening
+    cols = st.columns(len(conv_groups[group]))
+    for i, (unit, factor) in enumerate(conv_groups[group].items()):
+        cols[i].metric(unit, f"{val * factor:,.3f}")
+
+elif app_mode == "Structural Beam Preview":
+    st.title("🏗️ Basic Beam Stress Visualization")
+    st.info("Visualizing bending stress distribution across a cross-section.")
     
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(x=strain_elastic, y=stress_elastic, name='Elastic Region', line=dict(color='blue', width=3)))
-    fig.add_trace(go.Scatter(x=strain_plastic, y=stress_plastic, name='Plastic Region', line=dict(color='red', dash='dash')))
+    # Simple Stress Graphing
+    y = np.linspace(-50, 50, 100) # Section height
+    M = st.slider("Bending Moment (kNm)", 1, 500, 100)
+    I = 1e6 # Moment of Inertia constant
+    stress = (M * 1000 * y) / I # Sigma = My/I
     
-    fig.update_layout(title=f"Theoretical Curve for {selected_mat}",
-                     xaxis_title="Strain (ε)", yaxis_title="Stress (σ) MPa",
-                     template="plotly_dark")
+    fig = px.line(x=stress, y=y, labels={'x':'Stress (MPa)', 'y':'Distance from Neutral Axis (mm)'},
+                 title="Bending Stress Profile")
+    fig.add_vline(x=0, line_dash="dash", line_color="white")
     st.plotly_chart(fig, use_container_width=True)
