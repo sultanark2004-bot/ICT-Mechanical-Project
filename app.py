@@ -1,164 +1,133 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
-from datetime import datetime, timedelta
-import plotly.graph_objects as go
 
-# Page configuration
+# Page Configuration
 st.set_page_config(
-    page_title="ICT Mechanical Dashboard",
-    page_icon="⚙️",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    page_title="Mechanical Converter & Density Checker",
+    page_icon="🔧",
+    layout="wide"
 )
 
-# Custom CSS for professional styling
-def load_custom_css():
+# Professional UI/UX Styling
+def apply_custom_theme():
     st.markdown("""
         <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        /* Main background and font */
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap');
         
-        * { font-family: 'Inter', sans-serif; }
-        
-        .metric-card {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin-bottom: 1rem;
+        .main {
+            background-color: #0e1117;
         }
         
-        .header-container {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 2rem;
+        /* Glassmorphism Header */
+        .header-box {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
             border-radius: 15px;
-            color: white;
-            margin-bottom: 2rem;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            margin-bottom: 30px;
         }
         
-        [data-testid="stSidebar"] {
-            background: linear-gradient(180deg, #2d3748 0%, #1a202c 100%);
-        }
-        
-        .card {
-            background: white;
-            padding: 2rem;
-            border-radius: 15px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin-bottom: 1.5rem;
-            color: #1a202c;
+        .student-info {
+            color: #667eea;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 1.2rem;
+            font-weight: bold;
         }
 
-        .status-indicator {
-            display: inline-block;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            margin-right: 8px;
+        /* Unit Converter Cards */
+        div[data-testid="stVerticalBlock"] > div:has(div.converter-card) {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            padding: 20px;
+            border-left: 5px solid #764ba2;
         }
         
-        .status-online { background-color: #10b981; box-shadow: 0 0 10px #10b981; }
-        .status-warning { background-color: #f59e0b; box-shadow: 0 0 10px #f59e0b; }
-        
-        [data-testid="stMetricValue"] {
-            font-size: 2rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        /* Sidebar styling */
+        [data-testid="stSidebar"] {
+            background-color: #1a1c24;
         }
         </style>
     """, unsafe_allow_html=True)
 
-@st.cache_data
-def load_sample_data():
-    # FIXED: Use 'h' instead of 'H' for frequency to support latest Pandas/Python 3.14
-    dates = pd.date_range(end=datetime.now(), periods=100, freq='h')
-    
-    data = pd.DataFrame({
-        'timestamp': dates,
-        'temperature': np.random.normal(75, 5, 100),
-        'pressure': np.random.normal(100, 10, 100),
-        'rpm': np.random.normal(1500, 100, 100),
-        'vibration': np.random.normal(0.5, 0.1, 100),
-        'network_throughput': np.random.normal(85, 10, 100),
-        'system_uptime': np.random.uniform(98, 100, 100)
-    })
-    return data
+# Application Logic
+def main():
+    apply_custom_theme()
 
-def render_header():
+    # --- HEADER SECTION ---
     st.markdown("""
-        <div class="header-container">
-            <h1 style="margin: 0; font-size: 2.5rem; color: white;">⚙️ ICT Mechanical Engineering Dashboard</h1>
-            <p style="margin: 0.5rem 0 0 0; opacity: 0.9; font-size: 1.1rem; color: white;">
-                Advanced Monitoring & Analytics Platform
-            </p>
+        <div class="header-box">
+            <h1 style='color: white; margin-bottom: 0;'>🔧 Mechanical Unit & Density Tool</h1>
+            <p class="student-info">Developed by: Abdul Rafay Khan | Roll No: 25-ME-220</p>
         </div>
     """, unsafe_allow_html=True)
 
-def render_kpi_metrics(data):
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric("🌡️ Avg Temp", f"{data['temperature'].mean():.1f}°F")
-    with col2:
-        st.metric("⚡ Uptime", f"{data['system_uptime'].mean():.2f}%")
-    with col3:
-        st.metric("🔄 Avg RPM", f"{data['rpm'].mean():.0f}")
-    with col4:
-        st.metric("📊 Efficiency", f"{data['network_throughput'].mean():.1f}%")
-
-def render_monitoring_charts(data):
-    st.subheader("📈 Real-Time Monitoring")
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        fig_temp = go.Figure()
-        fig_temp.add_trace(go.Scatter(x=data['timestamp'], y=data['temperature'], fill='tozeroy', line_color='#ef4444'))
-        fig_temp.update_layout(title='Temperature (°F)', height=300, margin=dict(l=0, r=0, t=40, b=0))
-        st.plotly_chart(fig_temp, use_container_width=True)
-    
-    with col2:
-        fig_rpm = go.Figure()
-        fig_rpm.add_trace(go.Scatter(x=data['timestamp'], y=data['rpm'], fill='tozeroy', line_color='#3b82f6'))
-        fig_rpm.update_layout(title='RPM History', height=300, margin=dict(l=0, r=0, t=40, b=0))
-        st.plotly_chart(fig_rpm, use_container_width=True)
-
-def main():
-    load_custom_css()
-    
-    # Sidebar
+    # --- SIDEBAR NAVIGATION ---
     with st.sidebar:
-        st.title("🎛️ Navigation")
-        page = st.radio("Go to", ["🏠 Home Dashboard", "📊 Analytics", "📋 Reports"])
+        st.header("⚙️ Navigation")
+        tool_choice = st.radio("Select Tool:", ["Unit Converter", "Material Density Checker"])
         st.divider()
-        st.info("System Status: Online")
+        st.info("Engineering Tool v1.2")
 
-    render_header()
-    data = load_sample_data()
+    # --- TOOL 1: UNIT CONVERTER ---
+    if tool_choice == "Unit Converter":
+        st.subheader("📏 Engineering Unit Converter")
+        col1, col2 = st.columns(2)
 
-    if page == "🏠 Home Dashboard":
-        render_kpi_metrics(data)
+        with col1:
+            category = st.selectbox("Select Measurement:", ["Pressure", "Temperature", "Length"])
+            value = st.number_input("Enter Value:", value=1.0, step=0.1)
+
+        with col2:
+            if category == "Pressure":
+                unit = st.selectbox("Convert From:", ["PSI to Bar", "Bar to PSI", "Pascal to Bar"])
+                if unit == "PSI to Bar":
+                    res = value * 0.0689476
+                    st.success(f"Result: **{res:.4f} Bar**")
+                elif unit == "Bar to PSI":
+                    res = value * 14.5038
+                    st.success(f"Result: **{res:.4f} PSI**")
+
+            elif category == "Temperature":
+                unit = st.selectbox("Conversion:", ["Celsius to Fahrenheit", "Fahrenheit to Celsius"])
+                if unit == "Celsius to Fahrenheit":
+                    res = (value * 9/5) + 32
+                    st.success(f"Result: **{res:.2f} °F**")
+                else:
+                    res = (value - 32) * 5/9
+                    st.success(f"Result: **{res:.2f} °C**")
+
+            elif category == "Length":
+                unit = st.selectbox("Conversion:", ["Inches to mm", "mm to Inches"])
+                res = value * 25.4 if "mm" in unit else value / 25.4
+                st.success(f"Result: **{res:.4f} {'mm' if 'mm' in unit else 'in'}**")
+
+    # --- TOOL 2: DENSITY CHECKER ---
+    else:
+        st.subheader("🧪 Material Density Checker")
         
-        st.markdown("<br>", unsafe_allow_html=True)
-        c1, c2 = st.columns(2)
-        with c1:
-            st.markdown('<div class="card"><h3>🟢 Mechanical</h3>All systems operational</div>', unsafe_allow_html=True)
-        with c2:
-            st.markdown('<div class="card"><h3>🟡 ICT</h3>Minor latency detected</div>', unsafe_allow_html=True)
-            
-        render_monitoring_charts(data)
+        # Material Database
+        materials = {
+            "Steel": 7850,
+            "Aluminum": 2700,
+            "Copper": 8960,
+            "Titanium": 4506,
+            "Cast Iron": 7200
+        }
         
-    elif page == "📊 Analytics":
-        st.header("Deep Data Analysis")
-        st.write("Correlation Heatmap")
-        corr = data.drop('timestamp', axis=1).corr()
-        st.dataframe(corr.style.background_gradient(cmap='coolwarm'))
+        selected_mat = st.selectbox("Select Material:", list(materials.keys()))
+        density = materials[selected_mat]
         
-    elif page == "📋 Reports":
-        st.header("Shift Reports")
-        st.table(data.tail(10))
-        st.download_button("Download Full CSV", data.to_csv(), "report.csv")
+        st.metric(label=f"Density of {selected_mat}", value=f"{density} kg/m³")
+        
+        # Volume Calculation
+        st.write("---")
+        st.write("### Calculate Mass based on Volume")
+        volume = st.number_input("Enter Volume (m³):", value=0.1, min_value=0.0)
+        mass = density * volume
+        st.warning(f"Estimated Mass: **{mass:.2f} kg**")
 
 if __name__ == "__main__":
     main()
