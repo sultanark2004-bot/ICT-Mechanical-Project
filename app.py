@@ -1,113 +1,125 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
-import plotly.express as px
-import plotly.graph_objects as go
 
-# --- ADVANCED UI CONFIGURATION ---
+# --- PAGE CONFIGURATION ---
 st.set_page_config(
-    page_title="MECH-PRO | Advanced Suite",
+    page_title="ME-Systems | Abdul Rafay Khan",
     page_icon="⚙️",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    layout="wide"
 )
 
-# Custom CSS for Professional Branding
+# --- CUSTOM CSS FOR PROFESSIONAL UI ---
 st.markdown("""
     <style>
-    .main { background-color: #0e1117; }
-    .stMetric { background-color: #1f2937; padding: 15px; border-radius: 10px; border: 1px solid #374151; }
-    .developer-box { 
-        padding: 20px; 
-        border-radius: 10px; 
-        background: linear-gradient(135deg, #1e3a8a 0%, #1e1b4b 100%);
-        color: white;
+    .reportview-container { background: #0e1117; }
+    .header-box {
+        padding: 20px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        border: 1px solid #334155;
         margin-bottom: 25px;
+        text-align: center;
+    }
+    .stMetric {
+        background-color: #1e293b !important;
+        border: 1px solid #334155 !important;
+        padding: 15px !important;
+        border-radius: 8px !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# --- SIDEBAR IDENTIFICATION ---
-with st.sidebar:
-    st.markdown(f"""
-    <div class="developer-box">
-        <h2 style='margin:0;'>Abdul Rafay Khan</h2>
-        <p style='opacity:0.8;'>Reg ID: 25-ME-220</p>
-        <hr style='opacity:0.3;'>
-        <p style='font-size:0.8rem;'>Mechanical Engineering Systems v3.0</p>
+# --- IDENTIFICATION HEADER ---
+st.markdown(f"""
+    <div class="header-box">
+        <h1 style="color: #38bdf8; margin: 0;">Mechanical Systems Suite</h1>
+        <p style="color: #94a3b8; font-size: 1.2rem; margin: 5px 0;">Developed by: <b>Abdul Rafay Khan</b></p>
+        <p style="color: #64748b; font-size: 1rem; margin: 0;">Registration No: <b>25-ME-220</b></p>
     </div>
     """, unsafe_allow_html=True)
+
+# --- DATASET ---
+materials = {
+    "Mild Steel": 7850,
+    "Stainless Steel (304)": 8000,
+    "Aluminum (6061)": 2710,
+    "Copper (Pure)": 8960,
+    "Titanium (Gr 5)": 4430,
+    "Cast Iron": 7200,
+    "Brass": 8470
+}
+
+# --- TOOL NAVIGATION ---
+tab1, tab2 = st.tabs(["⚖️ Material Density Checker", "🔄 Precision Unit Converter"])
+
+# --- TAB 1: MATERIAL DENSITY CHECKER ---
+with tab1:
+    st.header("Material Density & Mass Engine")
     
-    st.header("Control Panel")
-    app_mode = st.radio("Toolbox Selection", 
-        ["Material Analytics", "Precision Converter", "Structural Beam Preview"])
-
-# --- DATA ENGINE ---
-materials_db = pd.DataFrame({
-    "Material": ["Steel (AISI 1020)", "Aluminum (6061-T6)", "Titanium (Gr 5)", "Copper (Pure)", "Brass"],
-    "Density (kg/m³)": [7850, 2700, 4430, 8960, 8500],
-    "Elastic Modulus (GPa)": [200, 68.9, 114, 117, 100],
-    "Yield Strength (MPa)": [350, 276, 880, 70, 200],
-    "Thermal Exp (µm/m·K)": [11.7, 23.6, 8.6, 16.7, 18.7]
-})
-
-# --- APP LOGIC ---
-
-if app_mode == "Material Analytics":
-    st.title("🔬 Material Property Analytics")
-    
-    col1, col2 = st.columns([1, 2])
+    col1, col2 = st.columns([1, 1.5])
     
     with col1:
-        selected_material = st.selectbox("Select Specimen", materials_db["Material"])
-        mat_data = materials_db[materials_db["Material"] == selected_material].iloc[0]
+        st.subheader("Input Parameters")
+        selected_mat = st.selectbox("Step 1: Select Material", list(materials.keys()))
+        density = materials[selected_mat]
         
-        st.metric("Density", f"{mat_data['Density (kg/m³)']:,} kg/m³")
-        st.metric("Modulus of Elasticity", f"{mat_data['Elastic Modulus (GPa)']} GPa")
-        st.metric("Yield Stress", f"{mat_data['Yield Strength (MPa)']} MPa")
+        shape = st.radio("Step 2: Component Geometry", ["Rectangular Block", "Solid Cylinder", "Custom Volume"])
+        
+        if shape == "Rectangular Block":
+            L = st.number_input("Length (mm)", value=100.0)
+            W = st.number_input("Width (mm)", value=50.0)
+            H = st.number_input("Height (mm)", value=10.0)
+            volume_m3 = (L * W * H) / 1e9
+            
+        elif shape == "Solid Cylinder":
+            D = st.number_input("Diameter (mm)", value=20.0)
+            L = st.number_input("Length (mm)", value=200.0)
+            volume_m3 = (3.14159 * (D/2)**2 * L) / 1e9
+            
+        else:
+            v_cm3 = st.number_input("Enter Volume (cm³)", value=100.0)
+            volume_m3 = v_cm3 / 1e6
 
     with col2:
-        # Comparison Radar Chart
-        fig = go.Figure()
-        categories = ['Density', 'Elastic Modulus', 'Yield Strength', 'Thermal Exp']
+        st.subheader("Calculation Result")
+        mass_kg = density * volume_m3
         
-        # Normalized values for visual comparison
-        fig.add_trace(go.Scatterpolar(
-            r=[mat_data['Density (kg/m³)']/9000, mat_data['Elastic Modulus (GPa)']/200, 
-               mat_data['Yield Strength (MPa)']/900, mat_data['Thermal Exp (µm/m·K)']/25],
-            theta=categories, fill='toself', name=selected_material
-        ))
-        fig.update_layout(polar=dict(radialaxis=dict(visible=False)), showlegend=True, template="plotly_dark")
-        st.plotly_chart(fig, use_container_width=True)
+        res_col1, res_col2 = st.columns(2)
+        res_col1.metric("Density", f"{density} kg/m³")
+        res_col2.metric("Calculated Mass", f"{mass_kg:.4f} kg")
+        
+        st.write(f"**Material Profile:** {selected_mat}")
+        st.progress(min(mass_kg / 10.0, 1.0)) # Visual bar based on 10kg max
+        
+        st.success(f"Result: The part weighs **{mass_kg*1000:.2f} grams**.")
 
-elif app_mode == "Precision Converter":
-    st.title("⚖️ Precision Unit Engine")
+# --- TAB 2: PRECISION UNIT CONVERTER ---
+with tab2:
+    st.header("Mechanical Unit Converter")
     
-    # Advanced Converter Logic
-    conv_groups = {
-        "Pressure/Stress": {"MPa": 1, "psi": 145.038, "Bar": 10, "Pa": 1000000},
-        "Force": {"Newton (N)": 1, "kN": 0.001, "lbf": 0.2248},
-        "Energy": {"Joule": 1, "BTU": 0.000947, "ft-lb": 0.737}
-    }
+    cat = st.selectbox("Select Dimension", ["Stress & Pressure", "Force", "Length"])
+    val_in = st.number_input("Enter Value", value=1.0, format="%.4f")
     
-    group = st.selectbox("Category", list(conv_groups.keys()))
-    val = st.number_input("Input Magnitude", value=100.0)
+    st.markdown("---")
+    res_cols = st.columns(3)
     
-    cols = st.columns(len(conv_groups[group]))
-    for i, (unit, factor) in enumerate(conv_groups[group].items()):
-        cols[i].metric(unit, f"{val * factor:,.3f}")
+    if cat == "Stress & Pressure":
+        # Base is MPa
+        res_cols[0].metric("Megapascals (MPa)", f"{val_in:.2f}")
+        res_cols[1].metric("PSI (lb/in²)", f"{val_in * 145.038:.2f}")
+        res_cols[2].metric("Bar", f"{val_in * 10:.2f}")
+        
+    elif cat == "Force":
+        # Base is Newtons
+        res_cols[0].metric("Newtons (N)", f"{val_in:.2f}")
+        res_cols[1].metric("Kilonewtons (kN)", f"{val_in / 1000:.4f}")
+        res_cols[2].metric("Pounds-force (lbf)", f"{val_in * 0.2248:.2f}")
+        
+    elif cat == "Length":
+        # Base is Millimeters
+        res_cols[0].metric("Millimeters (mm)", f"{val_in:.2f}")
+        res_cols[1].metric("Inches (in)", f"{val_in / 25.4:.4f}")
+        res_cols[2].metric("Meters (m)", f"{val_in / 1000:.4f}")
 
-elif app_mode == "Structural Beam Preview":
-    st.title("🏗️ Basic Beam Stress Visualization")
-    st.info("Visualizing bending stress distribution across a cross-section.")
-    
-    # Simple Stress Graphing
-    y = np.linspace(-50, 50, 100) # Section height
-    M = st.slider("Bending Moment (kNm)", 1, 500, 100)
-    I = 1e6 # Moment of Inertia constant
-    stress = (M * 1000 * y) / I # Sigma = My/I
-    
-    fig = px.line(x=stress, y=y, labels={'x':'Stress (MPa)', 'y':'Distance from Neutral Axis (mm)'},
-                 title="Bending Stress Profile")
-    fig.add_vline(x=0, line_dash="dash", line_color="white")
-    st.plotly_chart(fig, use_container_width=True)
+st.sidebar.markdown("### Documentation")
+st.sidebar.write("This tool provides high-accuracy density lookups and unit conversions specifically for Mechanical Engineering students.")
